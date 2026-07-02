@@ -17,6 +17,9 @@ import { Assistant } from './pages/Assistant';
 import { Spaces } from './pages/Spaces';
 import { Template } from './types';
 import { dbService } from './services/db';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+
 import { 
   Sprout, Sliders, Calendar, Droplet, ClipboardList, 
   Dna, TrendingUp, Sparkles, Sun, Moon, Bell, BellRing,
@@ -629,6 +632,54 @@ const DataDiagnostics: React.FC = () => {
     }
   };
 
+  const handleExportBackup = () => {
+    try {
+      const backup: Record<string, string | null> = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('ct_')) {
+          backup[key] = localStorage.getItem(key);
+        }
+      }
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backup, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `cyclos_backup_${new Date().toISOString().split('T')[0]}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    } catch (err) {
+      console.error('Error al exportar copia de seguridad:', err);
+      alert('Error al exportar copia de seguridad.');
+    }
+  };
+
+  const handleImportBackup = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const fileReader = new FileReader();
+    if (e.target.files && e.target.files[0]) {
+      fileReader.readAsText(e.target.files[0], "UTF-8");
+      fileReader.onload = (event) => {
+        try {
+          const parsed = JSON.parse(event.target?.result as string);
+          if (parsed && typeof parsed === 'object') {
+            Object.entries(parsed).forEach(([key, val]) => {
+              if (key.startsWith('ct_') && typeof val === 'string') {
+                localStorage.setItem(key, val);
+              }
+            });
+            alert('¡Copia de seguridad importada con éxito! La página se recargará para aplicar los cambios.');
+            window.location.reload();
+          } else {
+            alert('Formato de archivo inválido.');
+          }
+        } catch (err) {
+          console.error(err);
+          alert('Error al importar el archivo JSON.');
+        }
+      };
+    }
+  };
+
   const handleClearAll = () => {
     if (window.confirm('¿Estás seguro de que quieres LIMPIAR todo el almacenamiento local? Esta acción no se puede deshacer.')) {
       localStorage.clear();
@@ -656,7 +707,7 @@ const DataDiagnostics: React.FC = () => {
       // 1. Migrate Spaces
       const spaceIdMap = new Map<string, string>();
       for (const s of localSpaces) {
-        const res = await fetch('http://localhost:3001/api/spaces', {
+        const res = await fetch(`${API_BASE_URL}/spaces`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -678,7 +729,7 @@ const DataDiagnostics: React.FC = () => {
       // 2. Migrate Mothers
       const motherIdMap = new Map<string, string>();
       for (const m of localMothers) {
-        const res = await fetch('http://localhost:3001/api/mothers', {
+        const res = await fetch(`${API_BASE_URL}/mothers`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -710,7 +761,7 @@ const DataDiagnostics: React.FC = () => {
           completedAt: t.completedAt
         })) : [];
 
-        const res = await fetch('http://localhost:3001/api/grows', {
+        const res = await fetch(`${API_BASE_URL}/grows`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -753,7 +804,7 @@ const DataDiagnostics: React.FC = () => {
           // Now upload waterings, logs, and fertilizers for this grow!
           if (g.waterings) {
             for (const w of g.waterings) {
-              await fetch(`http://localhost:3001/api/grows/${newGrow.id}/waterings`, {
+              await fetch(`${API_BASE_URL}/grows/${newGrow.id}/waterings`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -769,7 +820,7 @@ const DataDiagnostics: React.FC = () => {
 
           if (g.fertilizers) {
             for (const f of g.fertilizers) {
-              await fetch(`http://localhost:3001/api/grows/${newGrow.id}/fertilizers`, {
+              await fetch(`${API_BASE_URL}/grows/${newGrow.id}/fertilizers`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -785,7 +836,7 @@ const DataDiagnostics: React.FC = () => {
 
           if (g.dailyLogs) {
             for (const l of g.dailyLogs) {
-              await fetch(`http://localhost:3001/api/grows/${newGrow.id}/logs`, {
+              await fetch(`${API_BASE_URL}/grows/${newGrow.id}/logs`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -810,7 +861,7 @@ const DataDiagnostics: React.FC = () => {
       // 4. Migrate Clones
       for (const c of localClones) {
         const motherPlantId = c.motherPlantId ? motherIdMap.get(c.motherPlantId) || null : null;
-        await fetch('http://localhost:3001/api/clones', {
+        await fetch(`${API_BASE_URL}/clones`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -894,6 +945,20 @@ const DataDiagnostics: React.FC = () => {
         >
           <span>Migrar datos locales al servidor</span>
         </button>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={handleExportBackup}
+            className="bg-slate-700 hover:bg-slate-650 text-white font-extrabold text-[9px] py-2 rounded-xl active:scale-95 transition-all uppercase tracking-wider cursor-pointer text-center"
+          >
+            Exportar Respaldo
+          </button>
+          <label
+            className="bg-slate-700 hover:bg-slate-650 text-white font-extrabold text-[9px] py-2 rounded-xl active:scale-95 transition-all uppercase tracking-wider cursor-pointer text-center flex items-center justify-center"
+          >
+            Importar Respaldo
+            <input type="file" accept=".json" onChange={handleImportBackup} className="hidden" />
+          </label>
+        </div>
         <button
           onClick={handleClearAll}
           className="w-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 font-bold text-[10px] py-1.5 rounded-xl transition-all cursor-pointer"
