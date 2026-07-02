@@ -1,0 +1,197 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scrollbar-gutter: stable;
+  }
+  body {
+    @apply font-sans bg-slate-50 text-slate-900 dark:bg-[#060a08] dark:text-forest-100 transition-colors duration-300 antialiased overflow-x-hidden;
+  }
+  .overflow-y-auto {
+    scrollbar-gutter: stable;
+  }
+}
+
+@layer components {
+  /* Glassmorphism custom classes */
+  .glass-panel {
+    @apply bg-white/70 dark:bg-[#0f1713]/80 backdrop-blur-md border border-slate-200/50 dark:border-forest-900/30 shadow-sm dark:shadow-glow-emerald;
+  }
+
+  .glass-card {
+    @apply bg-white/80 dark:bg-[#0f1713]/90 border border-slate-200/60 dark:border-forest-900/40 rounded-2xl shadow-sm dark:shadow-none hover:shadow-md dark:hover:border-accentGreen-500/30 transition-all duration-300;
+  }
+
+  .glass-input {
+    @apply w-full bg-slate-100/50 dark:bg-forest-950/40 border border-slate-200 dark:border-forest-900/40 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-accentGreen-500/50 dark:focus:border-accentGreen-400/50 transition-colors dark:text-white;
+  }
+
+  .glow-text {
+    @apply text-accentGreen-500 dark:text-accentGreen-400 dark:drop-shadow-[0_0_8px_rgba(52,211,153,0.5)];
+  }
+}
+
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 dark:bg-forest-900/50 rounded-full hover:bg-slate-400 dark:hover:bg-forest-800;
+}
+
+/* Timeline Custom Track styling */
+.timeline-track::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 20px;
+  width: 2px;
+  @apply bg-slate-200 dark:bg-forest-900/40;
+}
+
+/* Custom premium keyframes and animations */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes bounceSlow {
+  0%, 100% {
+    transform: translate(-50%, 0);
+  }
+  50% {
+    transform: translate(-50%, -6px);
+  }
+}
+
+@keyframes bounceYSlow {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes slideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleUp {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-float {
+  animation: float 4.5s ease-in-out infinite;
+}
+
+.animate-bounce-slow {
+  animation: bounceSlow 5s ease-in-out infinite;
+}
+
+.animate-bounce-y-slow {
+  animation: bounceYSlow 5s ease-in-out infinite;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-scale-up {
+  animation: scaleUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-slide-down {
+  animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes opacityFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-opacity-in {
+  animation: opacityFadeIn 0.25s ease-out forwards;
+}
+
+/* Gamified Journey / Confetti Animations */
+@keyframes pulseRing {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.6);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 14px rgba(245, 158, 11, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+  }
+}
+
+.animate-pulse-ring {
+  animation: pulseRing 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes confettiFall {
+  0% {
+    transform: translateY(-5vh) rotate(0deg) translateX(0);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(50vh) rotate(360deg) translateX(20px);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(105vh) rotate(720deg) translateX(-20px);
+    opacity: 0;
+  }
+}
+
+.animate-confetti-fall {
+  animation: confettiFall 3.5s ease-in-out forwards;
+}
+
+

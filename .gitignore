@@ -1,0 +1,26 @@
+# Node dependencies
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Environmental configuration
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Local SQLite databases (Prisma)
+backend/prisma/*.db
+backend/prisma/*.db-journal
+backend/prisma/*.db-shm
+backend/prisma/*.db-wal
+
+# Uploaded images (Multer local files)
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,192 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String   // Hashed password
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  grows     Grow[]
+  clones    CloneBatch[]
+  mothers   MotherPlant[]
+  spaces    Space[]
+}
+
+model Space {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  name            String
+  type            String   // ESQUEJES, MADRES, VEGETATIVO, FLORACION, SECADO, MIXTO
+  surfaceAreaSqm  Float
+  lightPowerWatts Int
+  maxPots         Int
+  createdAt       DateTime @default(now())
+  grows           Grow[]
+  setup           String   @default("carpa")
+}
+
+model Template {
+  id                 String   @id @default(uuid())
+  name               String
+  description        String
+  vegWeeks           Int
+  flowerWeeks        Int
+  photoperiod        Boolean  // true = 18/6 / 12/12, false = Autofloreciente
+  medium             String   // tierra, coco, hidroponia
+  fertilizerType     String   // organica, mineral
+  wateringFreqDays   Int
+  suggestedPrunings  String   // SQLite does not support String[]. Store as JSON array string or comma-separated values.
+  isCustom           Boolean  @default(false)
+}
+
+model Grow {
+  id                  String          @id @default(uuid())
+  userId              String
+  user                User            @relation(fields: [userId], references: [id])
+  name                String
+  genetics            String
+  seedBank            String
+  photoperiod         Boolean         // true = Fotoperiódica, false = Autofloreciente
+  startDate           DateTime
+  status              String          // VEGETATIVO, FLORACION, SECADO, CURADO, COSECHADO
+  medium              String          // TIERRA, COCO, HIDROPONIA
+  fertilizerType      String          // ORGANICA, MINERAL
+  indoor              Boolean         // true = Indoor, false = Exterior
+  plantCount          Int
+  potSizeInitial      Float
+  potSizeIntermediate Float?
+  potSizeFinal        Float
+  lightPowerWatts     Int
+  surfaceAreaSqm      Float
+  vegWeeksPlanned     Int
+  flowerWeeksPlanned  Int
+  spaceId             String?
+  space               Space?          @relation(fields: [spaceId], references: [id], onDelete: SetNull)
+  
+  // Watering configuration
+  wateringMode        String?         // manual, assisted
+  wateringFreqDays    Int?
+  fertFreqDays        Int?
+  avgTemp             Float?
+  avgHumidity         Float?
+  logReminderFreq     String?         // weekly, biweekly, none
+  logDayOfWeek        Int?            // 0 = Domingo, 1 = Lunes, ..., 6 = Sábado
+  fertDayOfWeek       Int?
+  lastWateringDate    DateTime?
+  experienceLevel     String?         // BEGINNER = Principiante, NORMAL = Normal
+
+  // Tasks, daily logs, waterings, feeds, and harvest records
+  tasks               Task[]
+  dailyLogs           DailyLog[]
+  waterings           WateringLog[]
+  fertilizers         FertilizerLog[]
+  harvest             HarvestRecord?
+  
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+}
+
+model Task {
+  id          String   @id @default(uuid())
+  growId      String
+  grow        Grow     @relation(fields: [growId], references: [id], onDelete: Cascade)
+  title       String   // e.g., "Trasplante a maceta final", "Poda Apical"
+  category    String   // GERMINACION, TRASPLANTE, PODA, ENTRENAMIENTO, FERTILIZACION, COSECHA, etc.
+  dueDate     DateTime
+  completed   Boolean  @default(false)
+  completedAt DateTime?
+  notes       String?
+}
+
+model DailyLog {
+  id          String   @id @default(uuid())
+  growId      String
+  grow        Grow     @relation(fields: [growId], references: [id], onDelete: Cascade)
+  date        DateTime
+  heightCm    Float?
+  nodes       Int?
+  tempMin     Float?
+  tempMax     Float?
+  humidityMin Float?
+  humidityMax Float?
+  ph          Float?
+  ec          Float?
+  notes       String?
+  photoUrl    String?
+}
+
+model WateringLog {
+  id           String   @id @default(uuid())
+  growId       String
+  grow         Grow     @relation(fields: [growId], references: [id], onDelete: Cascade)
+  date         DateTime
+  volumeLiters Float
+  ph           Float?
+  ec           Float?
+  additives    String?  // JSON string or plain text listing additives
+}
+
+model FertilizerLog {
+  id            String   @id @default(uuid())
+  growId        String
+  grow          Grow     @relation(fields: [growId], references: [id], onDelete: Cascade)
+  date          DateTime
+  productName   String
+  dosageMlPerL  Float
+  frequencyDays Int?
+  notes         String?
+}
+
+model MotherPlant {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  name        String   // e.g., "Madre Gorilla #1"
+  genetics    String
+  seedBank    String?
+  startDate   DateTime
+  notes       String?
+  status      String   // ACTIVA, JUBILADA
+  clones      CloneBatch[]
+}
+
+model CloneBatch {
+  id            String       @id @default(uuid())
+  userId        String
+  user          User         @relation(fields: [userId], references: [id])
+  motherPlantId String?
+  motherPlant   MotherPlant? @relation(fields: [motherPlantId], references: [id], onDelete: SetNull)
+  name          String       // e.g., "Lote Clones Gorilla Mayo"
+  cutDate       DateTime
+  rootedDate    DateTime?
+  quantityCut   Int
+  quantityRooted Int?
+  successRate   Float?
+  notes         String?
+  status        String       // ENRAIZANDO, COMPLETADO, TRASPLANTADO
+  avgTemp       Float?
+  avgHumidity   Float?
+}
+
+model HarvestRecord {
+  id            String   @id @default(uuid())
+  growId        String   @unique
+  grow          Grow     @relation(fields: [growId], references: [id], onDelete: Cascade)
+  harvestDate   DateTime
+  wetWeightGrams Float?
+  dryWeightGrams Float
+  cureStartDate DateTime?
+  cureEndDate   DateTime?
+  potencyRating Int?     // 1-5 stars
+  terpenesNotes String?
+  generalNotes  String?
+}
