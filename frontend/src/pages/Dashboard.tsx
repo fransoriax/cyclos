@@ -8,6 +8,7 @@ import {
   CheckCircle2, ChevronLeft, X, Leaf, ClipboardList, Camera
 } from 'lucide-react';
 import { getLocalDate, isSameDay, isBeforeDay } from '../utils/date';
+import { dbService } from '../services/db';
 
 
 const getWateringFrequencyDays = (medium: string) => {
@@ -1028,7 +1029,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onOpenCreateGr
               dueDate: wateringsOnDay[0].date,
               completed: true,
               isVirtual: true,
-              isFertDay: hasFert
+              isFertDay: !!hasFert
             });
           }
         }

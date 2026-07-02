@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { getLocalDate, formatLocalDate, isBeforeDay } from '../utils/date';
 import { TUTORIALS } from '../data/tutorials';
+import { dbService } from '../services/db';
 
 export interface PathNode {
   id: string;

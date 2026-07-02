@@ -7,6 +7,7 @@ import {
   Trash2, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { formatLocalDate, getLocalDate } from '../utils/date';
+import { dbService } from '../services/db';
 
 const getLogStageWeek = (logDateStr: string, grow: Grow) => {
   const logDate = getLocalDate(logDateStr);
