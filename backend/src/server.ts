@@ -268,7 +268,7 @@ app.post('/api/grows', async (req: Request, res: Response, next: NextFunction) =
 
     const newGrow = await prisma.grow.create({
       data: {
-        userId: mockUserId,
+        userId: userId,
         name,
         genetics,
         seedBank,
@@ -667,7 +667,7 @@ app.post('/api/clones', async (req: Request, res: Response, next: NextFunction) 
 
     const clones = await prisma.cloneBatch.create({
       data: {
-        userId: targetUserId,
+        userId: userId,
         motherPlantId: motherPlantId || null,
         name,
         cutDate: new Date(cutDate),
@@ -822,7 +822,7 @@ app.post('/api/spaces', async (req: Request, res: Response, next: NextFunction) 
 
     const space = await prisma.space.create({
       data: {
-        userId: targetUserId,
+        userId: userId,
         name,
         type,
         surfaceAreaSqm: area,
