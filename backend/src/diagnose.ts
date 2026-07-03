@@ -7,7 +7,35 @@ async function diagnose() {
   console.log('DATABASE_URL:', process.env.DATABASE_URL);
   console.log('UPLOADS_DIR:', process.env.UPLOADS_DIR);
 
-  // Ver carpetas y permisos
+  // Asegurar que existan y persistan los directorios necesarios para la app antes de los tests
+  const dbUrl = process.env.DATABASE_URL;
+  if (dbUrl && dbUrl.startsWith('file:')) {
+    const dbPath = dbUrl.replace(/^file:/, '');
+    const dbDir = path.dirname(path.resolve(dbPath));
+    if (!fs.existsSync(dbDir)) {
+      try {
+        fs.mkdirSync(dbDir, { recursive: true });
+        console.log(`Directorio de base de datos creado: ${dbDir}`);
+      } catch (err: any) {
+        console.log(`Error al crear el directorio de base de datos ${dbDir}:`, err.message);
+      }
+    }
+  }
+
+  const envUploadsDir = process.env.UPLOADS_DIR;
+  if (envUploadsDir) {
+    const absUploads = path.resolve(envUploadsDir);
+    if (!fs.existsSync(absUploads)) {
+      try {
+        fs.mkdirSync(absUploads, { recursive: true });
+        console.log(`Directorio de subidas (uploads) creado: ${absUploads}`);
+      } catch (err: any) {
+        console.log(`Error al crear el directorio de subidas ${absUploads}:`, err.message);
+      }
+    }
+  }
+
+  // Ver carpetas y verificar permisos
   const pathsToCheck = ['/data', '/data/db', '/data/database', './prisma'];
   for (const p of pathsToCheck) {
     const absPath = path.resolve(p);
@@ -31,7 +59,17 @@ async function diagnose() {
         try {
           fs.mkdirSync(absPath, { recursive: true });
           console.log(`  ¡Creación de carpeta ${absPath} EXITOSA!`);
-          fs.rmdirSync(absPath);
+          
+          // No borrarla si es necesaria para la base de datos o subidas
+          const isDbDir = dbUrl && dbUrl.startsWith('file:') && path.dirname(path.resolve(dbUrl.replace(/^file:/, ''))).startsWith(absPath);
+          const isUploadsDir = envUploadsDir && path.resolve(envUploadsDir).startsWith(absPath);
+          
+          if (!isDbDir && !isUploadsDir) {
+            fs.rmdirSync(absPath);
+            console.log(`  Carpeta de test ${absPath} eliminada.`);
+          } else {
+            console.log(`  Manteniendo carpeta creada ${absPath} ya que es requerida por la aplicación.`);
+          }
         } catch (cErr: any) {
           console.log(`  Fallo al crear carpeta ${absPath}:`, cErr.message);
         }

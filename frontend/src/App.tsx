@@ -18,7 +18,7 @@ import { Spaces } from './pages/Spaces';
 import { Template } from './types';
 import { dbService } from './services/db';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = localStorage.getItem('ct_api_url') || import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 import { 
   Sprout, Sliders, Calendar, Droplet, ClipboardList, 
@@ -588,7 +588,45 @@ const DashboardContainer: React.FC<{ onLogout?: () => void }> = ({ onLogout }) =
 const DataDiagnostics: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user } = useAuth();
-  
+  const [apiUrl, setApiUrl] = useState(localStorage.getItem('ct_api_url') || import.meta.env.VITE_API_URL || 'http://localhost:3001/api');
+  const [isConnected, setIsConnected] = useState<boolean | null>(null);
+
+  const checkConnection = async (urlToCheck: string) => {
+    try {
+      const res = await fetch(`${urlToCheck}/health`);
+      if (res.ok) {
+        const data = await res.json();
+        setIsConnected(data.status === 'OK');
+      } else {
+        setIsConnected(false);
+      }
+    } catch {
+      setIsConnected(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      checkConnection(apiUrl);
+    }
+  }, [isOpen, apiUrl]);
+
+  const handleSaveApiUrl = () => {
+    try {
+      const trimmed = apiUrl.trim();
+      if (!trimmed) {
+        localStorage.removeItem('ct_api_url');
+        alert('URL del servidor API restaurada al valor por defecto. La página se recargará.');
+      } else {
+        localStorage.setItem('ct_api_url', trimmed);
+        alert('URL del servidor API guardada con éxito. La página se recargará.');
+      }
+      window.location.reload();
+    } catch (err) {
+      alert('Error al guardar la URL.');
+    }
+  };
+
   const getInfo = () => {
     try {
       const grows = JSON.parse(localStorage.getItem('ct_grows') || '[]');
@@ -931,6 +969,42 @@ const DataDiagnostics: React.FC = () => {
       ) : (
         <p className="text-rose-400 font-bold">Error al leer almacenamiento local.</p>
       )}
+
+      {/* API Connection & Server Configuration */}
+      <div className="pt-2 border-t border-white/5 space-y-2">
+        <div className="flex items-center justify-between text-[10px] text-slate-350">
+          <strong className="text-white">Estado API:</strong>
+          {isConnected === null ? (
+            <span className="text-slate-400 flex items-center space-x-1 font-semibold">
+              <Loader2 size={10} className="animate-spin" />
+              <span>Verificando...</span>
+            </span>
+          ) : isConnected ? (
+            <span className="text-emerald-400 font-bold flex items-center">🟢 Conectado</span>
+          ) : (
+            <span className="text-rose-400 font-bold flex items-center">🔴 Desconectado</span>
+          )}
+        </div>
+
+        <div className="bg-white/5 border border-white/5 rounded-xl p-2 space-y-1.5">
+          <label className="font-extrabold text-[9px] uppercase text-slate-400 tracking-wider block">Servidor API</label>
+          <div className="flex space-x-1.5">
+            <input
+              type="text"
+              value={apiUrl}
+              onChange={(e) => setApiUrl(e.target.value)}
+              placeholder="http://localhost:3001/api"
+              className="bg-black/20 border border-white/10 rounded-lg px-2 py-1 text-[10px] flex-1 focus:outline-none focus:border-accentGreen-500/50 text-white font-mono"
+            />
+            <button
+              onClick={handleSaveApiUrl}
+              className="bg-accentGreen-500 hover:bg-accentGreen-600 text-white font-extrabold text-[9px] px-2 py-1 rounded-lg active:scale-95 transition-all cursor-pointer"
+            >
+              Guardar
+            </button>
+          </div>
+        </div>
+      </div>
 
       <div className="pt-2 border-t border-white/5 space-y-2">
         <button

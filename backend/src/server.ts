@@ -129,6 +129,21 @@ app.post('/api/auth/register', async (req: Request, res: Response, next: NextFun
       where: { email: email.toLowerCase().trim() }
     });
     if (existingUser) {
+      if (existingUser.password === 'pbkdf2_hashed_mock_password') {
+        if (password.length < 6) {
+          return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres.' });
+        }
+        const salt = await bcrypt.genSalt(10);
+        const passwordHash = await bcrypt.hash(password, salt);
+        const updatedUser = await prisma.user.update({
+          where: { id: existingUser.id },
+          data: {
+            name: name.trim(),
+            password: passwordHash
+          }
+        });
+        return res.status(200).json({ id: updatedUser.id, email: updatedUser.email, name: updatedUser.name });
+      }
       return res.status(400).json({ error: 'Ya existe una cuenta con ese email.' });
     }
 

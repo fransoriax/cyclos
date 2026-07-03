@@ -3,7 +3,7 @@ import { DEFAULT_TEMPLATES } from '../data/templates';
 
 // Toggle this to true to connect to the active Express + Node.js backend on http://localhost:3001
 const USE_API = true;
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = localStorage.getItem('ct_api_url') || import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 // Get current logged-in user ID from auth session
 const getCurrentUserId = (): string => {

@@ -30,7 +30,7 @@ interface AuthContextType {
 
 const USERS_KEY = 'ct_users';
 const SESSION_KEY = 'ct_session';
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = localStorage.getItem('ct_api_url') || import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 /* ====================================================================
    CRYPTO HELPERS
